@@ -11,9 +11,9 @@ import { execSync } from "node:child_process";
 export async function run() {
   logger.info("AI GitLab Runner Started");
   const context = buildContext();
-  logger.info`Project: ${context.projectPath || "(unknown)"}`);
-  logger.info`Triggered by: @${context.author || "unknown"}`);
-  logger.info`Branch: ${context.branch}`);
+  logger.info(`Project: ${context.projectPath || "(unknown)"}`);
+  logger.info(`Triggered by: @${context.author || "unknown"}`);
+  logger.info(`Branch: ${context.branch}`);
   
   const startTime = Date.now();
   
@@ -26,7 +26,7 @@ export async function run() {
       // Ensure we're on the correct branch even if we're already in a git repo
       ensureBranch(context);
     }
-    logger.info`Prompt: ${context.prompt}`);
+    logger.info(`Prompt: ${context.prompt}`);
     // await postComment(context, "🤖 Getting the vibes started...");
     const hasAnyProviderKey = validateProviderKeys();
     if (!hasAnyProviderKey) {
@@ -34,9 +34,9 @@ export async function run() {
         "No provider API key detected in env. opencode may fail to start unless credentials are pre-configured via 'opencode auth login'.",
       );
     }
-    logger.info`Working directory: ${process.cwd()}`); // Should be /opt/agent/repo
+    logger.info(`Working directory: ${process.cwd()}`); // Should be /opt/agent/repo
     await runOpencode(context, context.prompt);
-    logger.info`Working directory after opencode: ${process.cwd()}`);
+    logger.info(`Working directory after opencode: ${process.cwd()}`);
     
     // Calculate AI execution time
     const aiTimeSeconds = Math.round((Date.now() - startTime) / 1000);

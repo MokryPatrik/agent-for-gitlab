@@ -76,7 +76,7 @@ export async function run() {
 async function reportToSupabase(context, costUsd, aiTimeSeconds) {
   try {
     const payload = {
-      gitlabId: context.resourceId,
+      gitlabId: context.branch,
       title: context.prompt?.substring(0, 100) || "AI Task",
       status: "ai_solved",
       aiAttempted: true,
@@ -84,6 +84,7 @@ async function reportToSupabase(context, costUsd, aiTimeSeconds) {
       tokens: 0,
       cost: costUsd,
       aiTime: aiTimeSeconds,
+      projectId: context.projectId
     };
     
     const response = await fetch("https://rfzqphgaqqktfnglfmya.supabase.co/functions/v1/issues", {

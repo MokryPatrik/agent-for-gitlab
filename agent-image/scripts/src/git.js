@@ -129,3 +129,48 @@ export function setupLocalRepository(context) {
 
   ensureBranch(context);
 }
+
+export function createCommit(context, message) {
+  logger.start("Creating commit...");
+
+  try {
+    // Check if there are any changes to commit
+    const statusOutput = execFileSync("git", ["status", "--porcelain"], {
+      encoding: "utf8",
+    }).trim();
+
+    if (!statusOutput) {
+      logger.info("No changes to commit");
+      return false;
+    }
+
+    logger.info("Changes detected:");
+    logger.info(statusOutput);
+
+    // Add all changes
+    logger.info("Staging all changes...");
+    execFileSync("git", ["add", "-A"], {
+      encoding: "utf8",
+    });
+
+    // Create commit with the provided message
+    logger.info("Creating commit...");
+    execFileSync("git", ["commit", "-m", message], {
+      encoding: "utf8",
+    });
+
+    logger.success("Commit created successfully");
+
+    // Push to remote
+    logger.start("Pushing to remote...");
+    execFileSync("git", ["push"], {
+      encoding: "utf8",
+    });
+
+    logger.success("Changes pushed to remote");
+    return true;
+  } catch (error) {
+    logger.error(`Failed to create commit: ${error.message}`);
+    throw error;
+  }
+}

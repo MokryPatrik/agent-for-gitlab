@@ -58,7 +58,7 @@ export async function run() {
     }
     
     // Report to Supabase
-    await reportToSupabase(context, totalCost, aiTimeSeconds);
+    await reportToDb(context, totalCost, aiTimeSeconds);
     
     writeOutput(true, {
       prompt: context.prompt,
@@ -73,24 +73,25 @@ export async function run() {
   }
 }
 
-async function reportToSupabase(context, costUsd, aiTimeSeconds) {
+async function reportToDb(context, costUsd, aiTimeSeconds) {
   try {
     const payload = {
-      gitlabId: context.branch,
+      gitlab_id: context.branch,
       title: context.prompt?.substring(0, 100) || "AI Task",
       status: "ai_solved",
-      aiAttempted: true,
-      aiSolved: false,
+      ai_attempted: true,
+      ai_solved: false,
       tokens: 0,
       cost: costUsd,
-      aiTime: aiTimeSeconds,
-      projectId: context.projectId
+      ai_time: aiTimeSeconds,
+      project_id: context.projectId
     };
     
-    const response = await fetch("https://rfzqphgaqqktfnglfmya.supabase.co/functions/v1/issues", {
+    const response = await fetch(context.dataStorageApiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-api-key": context.dataStorageApiKey
       },
       body: JSON.stringify(payload),
     });

@@ -7,6 +7,7 @@ import { runOpencode } from "./opencode.js";
 import { writeOutput } from "./output.js";
 import { gitSetup } from "./git.js";
 import { execSync } from "node:child_process";
+import { downloadSession, uploadSession, cleanupSessionZip } from "./session.js";
 
 export async function run() {
   logger.info("AI GitLab Runner Started");
@@ -34,6 +35,11 @@ export async function run() {
         "No provider API key detected in env. opencode may fail to start unless credentials are pre-configured via 'opencode auth login'.",
       );
     }
+
+    // Download and restore previous session if available
+    logger.start("Checking for previous opencode session...");
+    await downloadSession(context);
+
     logger.info(`Working directory: ${process.cwd()}`); // Should be /opt/agent/repo
     const opencodeOutput = await runOpencode(context, context.prompt);
     logger.info(`Working directory after opencode: ${process.cwd()}`);
@@ -82,6 +88,11 @@ ${output.substring(0, 5000)}${output.length > 5000 ? '\n\n... (truncated for bre
 
     await postComment(context, successMessage);
 
+    // Upload session to API for future use
+    logger.start("Uploading session for future continuity...");
+    await uploadSession(context);
+    cleanupSessionZip();
+
     writeOutput(true, {
       prompt: context.prompt,
       branch: context.branch,
@@ -92,6 +103,9 @@ ${output.substring(0, 5000)}${output.length > 5000 ? '\n\n... (truncated for bre
     process.exit(0);
   } catch (error) {
     await handleError(context, error);
+  } finally {
+    // Always cleanup temp files
+    cleanupSessionZip();
   }
 }
 
@@ -132,6 +146,15 @@ async function reportToDb(context, costUsd, aiTimeSeconds) {
 
 async function handleError(context, error) {
   logger.error(error.message);
+
+  // Try to upload session even on error to preserve state
+  try {
+    logger.start("Attempting to save session despite error...");
+    await uploadSession(context);
+  } catch (uploadError) {
+    logger.warn(`Failed to upload session on error: ${uploadError.message}`);
+  }
+
   await postComment(
     context,
     `❌ AI encountered an error:\n\n` +

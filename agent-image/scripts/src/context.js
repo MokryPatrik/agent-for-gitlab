@@ -26,5 +26,7 @@ export function buildContext() {
     projectId: process.env.CI_PROJECT_ID,
     serverUrl: process.env.CI_SERVER_URL || "https://gitlab.com",
     checkoutDir: "./repo",
+    dataStorageApiUrl: process.env.AI_DATA_STORAGE_API_URL,
+    dataStorageApiKey: process.env.AI_DATA_STORAGE_API_KEY,
   };
 }

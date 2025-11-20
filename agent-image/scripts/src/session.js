@@ -51,7 +51,7 @@ export function unzipSession(zipPath) {
   try {
     if (!existsSync(zipPath)) {
       logger.warn(`Session zip not found at ${zipPath}`);
-      return false;
+      return null;
     }
 
     logger.info("Restoring opencode session...");
@@ -67,10 +67,40 @@ export function unzipSession(zipPath) {
     });
 
     logger.success("Session restored successfully");
-    return true;
+
+    // Find the most recent session ID
+    const sessionId = getLatestSessionId();
+    if (sessionId) {
+      logger.info(`Found previous session: ${sessionId}`);
+    }
+
+    return sessionId;
   } catch (error) {
     logger.error(`Failed to unzip session: ${error.message}`);
-    return false;
+    return null;
+  }
+}
+
+/**
+ * Get the latest OpenCode session ID
+ */
+export function getLatestSessionId() {
+  try {
+    const messagesDir = join(OPENCODE_DIR, "storage/message");
+    if (!existsSync(messagesDir)) {
+      return null;
+    }
+
+    // Find the most recent session directory
+    const result = execSync(
+      `ls -td "${messagesDir}"/ses_* 2>/dev/null | head -n 1 | xargs basename 2>/dev/null || echo ""`,
+      { encoding: "utf-8" }
+    ).trim();
+
+    return result || null;
+  } catch (error) {
+    logger.warn(`Could not find latest session ID: ${error.message}`);
+    return null;
   }
 }
 

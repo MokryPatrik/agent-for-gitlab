@@ -1,6 +1,6 @@
 import logger from "./logger.js";
 
-export async function runOpencode(context, prompt) {
+export async function runOpencode(context, prompt, opencodeSessionId = null) {
   logger.start("Running opencode via cli...");
 
   const [providerID, modelID] = context.opencodeModel.split('/');
@@ -10,11 +10,17 @@ export async function runOpencode(context, prompt) {
 
   logger.info(`Using model: ${modelID} from provider: ${providerID}`);
 
+  if (opencodeSessionId) {
+    logger.info(`Continuing in session: ${opencodeSessionId}`);
+  } else {
+    logger.info("Starting new session");
+  }
+
   logger.info("Sending prompt to model ... this may take a while");
 
   const { spawnSync } = await import("node:child_process");
 
-  // First run with --print-logs for full output to logs
+  // Build args with session ID if available
   const cliArgsWithLogs = [
     "run",
     "--print-logs",
@@ -23,6 +29,11 @@ export async function runOpencode(context, prompt) {
     "--log-level",
     "ERROR"
   ];
+
+  // If we have a session ID, use --session to continue
+  if (opencodeSessionId) {
+    cliArgsWithLogs.push("--session", opencodeSessionId);
+  }
 
   logger.info(`Running: opencode ${cliArgsWithLogs.join(" ")}`);
 

@@ -38,10 +38,10 @@ export async function run() {
 
     // Download and restore previous session if available
     logger.start("Checking for previous opencode session...");
-    await downloadSession(context);
+    const opencodeSessionId = await downloadSession(context);
 
     logger.info(`Working directory: ${process.cwd()}`); // Should be /opt/agent/repo
-    const opencodeOutput = await runOpencode(context, context.prompt);
+    const opencodeOutput = await runOpencode(context, context.prompt, opencodeSessionId);
     logger.info(`Working directory after opencode: ${process.cwd()}`);
 
     // Create commit with changes made by opencode

@@ -62,7 +62,7 @@ export function unzipSession(zipPath) {
     }
 
     // Unzip session
-    execSync(`unzip -o "${zipPath}" -d "${OPENCODE_DIR}" -q`, {
+    execSync(`unzip -q -o "${zipPath}" -d "${OPENCODE_DIR}"`, {
       encoding: "utf-8",
     });
 

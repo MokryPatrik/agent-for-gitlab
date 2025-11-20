@@ -35,7 +35,7 @@ export async function run() {
       );
     }
     logger.info(`Working directory: ${process.cwd()}`); // Should be /opt/agent/repo
-    await runOpencode(context, context.prompt);
+    const opencodeOutput = await runOpencode(context, context.prompt);
     logger.info(`Working directory after opencode: ${process.cwd()}`);
 
     // Create commit with changes made by opencode
@@ -67,14 +67,28 @@ Triggered by: @${context.author}`;
     
     // Report to Supabase
     await reportToDb(context, totalCost, aiTimeSeconds);
-    
+
+    // Post opencode output to GitLab
+    // Use finalResponse to get clean output without thinking/logs
+    const output = opencodeOutput.finalResponse || opencodeOutput.fullOutput || "No output captured";
+    const successMessage = `✅ AI task completed successfully!
+
+**Branch:** ${context.branch}
+**Cost:** $${totalCost.toFixed(6)}
+**Execution time:** ${aiTimeSeconds}s
+
+**Response:**
+${output.substring(0, 5000)}${output.length > 5000 ? '\n\n... (truncated for brevity)' : ''}`;
+
+    await postComment(context, successMessage);
+
     writeOutput(true, {
       prompt: context.prompt,
       branch: context.branch,
       cost: totalCost,
       aiTime: aiTimeSeconds,
     });
-    
+
     process.exit(0);
   } catch (error) {
     await handleError(context, error);

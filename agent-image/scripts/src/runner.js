@@ -112,7 +112,7 @@ ${output.substring(0, 5000)}${output.length > 5000 ? '\n\n... (truncated for bre
 async function reportToDb(context, costUsd, aiTimeSeconds) {
   try {
     const payload = {
-      gitlab_id: context.branch,
+      gitlab_id: `${context.projectPath}_${context.branch}`,
       title: context.prompt?.substring(0, 100) || "AI Task",
       status: "ai_solved",
       ai_attempted: true,
